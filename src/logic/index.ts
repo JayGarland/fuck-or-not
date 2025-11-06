@@ -5,7 +5,7 @@ import { ref, watch } from 'vue'
 
 export const isDark = useDark()
 export const toggleDark = useToggle(isDark)
-export const googleApiKey = useStorage('google-api-key', '')
+export const googleApiKey = useStorage('google-api-key', import.meta.env.VITE_GOOGLE_API_KEY || '')
 const ai = ref<GoogleGenAI | null>(new GoogleGenAI({ apiKey: googleApiKey.value }))
 
 watch(googleApiKey, (key) => {

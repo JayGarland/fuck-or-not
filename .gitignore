@@ -8,7 +8,9 @@ node_modules
 .idea/
 *.log
 temp
+.env
 
 
 # Local Netlify folder
 .netlify
+package-lock.json
