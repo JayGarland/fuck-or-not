@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import type { FavoriteResult } from '~/types'
+import type { ExtractedResponse, FavoriteResult } from '~/types'
+
 import {
   createPartFromUri,
   createUserContent,
@@ -10,8 +11,9 @@ import { computed, ref } from 'vue'
 import Button from '~/components/Button.vue'
 import ButtonSelect from '~/components/ButtonSelect.vue'
 import ImageUploader from '~/components/ImageUploader.vue'
+import ResultDisplay from '~/components/ResultDisplay.vue'
 import Select from '~/components/Select.vue'
-import { fileToBase64, generateContent, googleApiKey, uploadFileToAPI } from '~/logic'
+import { extractJsonFromResponse, fileToBase64, generateContent, googleApiKey, uploadFileToAPI } from '~/logic'
 import { defaultConcisePrompt, defaultDetailedPrompt, defaultNovelPrompt } from '~/logic/prompts'
 
 defineOptions({
@@ -31,6 +33,7 @@ const selectedModel = useStorage('selected-model', 'gemini-2.0-flash')
 const selectedMode = useStorage<'concise' | 'detailed' | 'novel' | 'custom'>('selected-mode', 'novel')
 const uploadType = useStorage<'base64' | 'api'>('upload-type', 'base64')
 const result = ref('')
+const extractedData = ref<ExtractedResponse | null>(null)
 const errorMsg = ref('')
 const analyseButtonLoading = ref(false)
 const analyseButtonDisabled = computed(() => {
@@ -108,7 +111,7 @@ async function handleAnalyseButtonClick() {
       const uploadedFile = await uploadFileToAPI(image.value)
       const contents = createUserContent([
         createPartFromUri(uploadedFile.uri!, uploadedFile.mimeType!),
-        finalPrompt || '分析这张图片',
+        finalPrompt || '细品这张图片',
       ])
       response = await generateContent(
         selectedModel.value,
@@ -152,6 +155,11 @@ async function handleAnalyseButtonClick() {
     else {
       saveButtonDisabled.value = false
       result.value = response.text!
+
+      // Extract JSON from response
+      extractedData.value = extractJsonFromResponse(response.text!)
+      console.log('Extracted data:', extractedData.value)
+
       errorMsg.value = ''
       lastFavoriteResult.value = {
         model: selectedModel.value,
@@ -227,15 +235,19 @@ function handleSaveButtonClick() {
     {{ errorMsg }}
   </div>
   <div v-show="result !== '' && errorMsg !== ''" py-1 />
-  <div
-    v-show="result !== ''"
-    p="x-4 y-3" select-text
-    border="~ base hover-base rounded"
-    bg="light dark:dark"
-    whitespace-pre-wrap text-left
-  >
-    {{ result }}
+
+  <!-- Result Display -->
+  <div v-if="extractedData && result !== ''" mb-4>
+    <div
+      p="x-6 y-5"
+      border="~ base hover-base rounded-lg"
+      bg="light dark:dark"
+      select-text
+    >
+      <ResultDisplay :extracted-data="extractedData" size="large" />
+    </div>
   </div>
+
   <div v-show="result !== ''">
     <div py-2 />
     <Button

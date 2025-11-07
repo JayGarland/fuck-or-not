@@ -1,4 +1,5 @@
 import type { ContentListUnion } from '@google/genai'
+import type { ExtractedResponse, ParsedJsonResponse } from '~/types'
 import { GoogleGenAI, HarmBlockThreshold, HarmCategory } from '@google/genai'
 import { useDark, useStorage, useToggle } from '@vueuse/core'
 import { ref, watch } from 'vue'
@@ -50,4 +51,58 @@ export function fileToBase64(file: File): Promise<string> {
     reader.onerror = () => reject(reader.error)
     reader.readAsDataURL(file)
   })
+}
+
+/**
+ * Extract and parse JSON from AI response text
+ * Handles various JSON formats including code blocks
+ */
+export function extractJsonFromResponse(text: string): ExtractedResponse {
+  const result: ExtractedResponse = {
+    hasJson: false,
+    jsonData: null,
+    remainingText: text,
+    rawText: text,
+  }
+
+  if (!text) {
+    return result
+  }
+
+  // Try to find JSON in various formats
+  const patterns = [
+    // JSON code block with ```json
+    /```json\s*(\{[\s\S]*?\})\s*```/i,
+    // Plain code block with ```
+    /```\s*(\{[\s\S]*?\})\s*```/,
+    // Direct JSON object
+    /(\{[\s\S]*?"verdict"[\s\S]*?\})/i,
+    // Any JSON object
+    /(\{[\s\S]*?\})/,
+  ]
+
+  for (const pattern of patterns) {
+    const match = text.match(pattern)
+    if (match) {
+      try {
+        const jsonStr = match[1].trim()
+        const parsed = JSON.parse(jsonStr) as ParsedJsonResponse
+
+        // Validate that it has expected fields
+        if (parsed.verdict || parsed.rating || parsed.explanation) {
+          result.hasJson = true
+          result.jsonData = parsed
+          // Remove the JSON part from the text
+          result.remainingText = text.replace(match[0], '').trim()
+          break
+        }
+      }
+      catch {
+        // Continue to next pattern if parsing fails
+        continue
+      }
+    }
+  }
+
+  return result
 }

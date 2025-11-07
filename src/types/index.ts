@@ -5,3 +5,16 @@ export interface FavoriteResult {
   time: number
   result: string
 }
+
+export interface ParsedJsonResponse {
+  verdict?: 'SMASH' | 'PASS'
+  rating?: number
+  explanation?: string
+}
+
+export interface ExtractedResponse {
+  hasJson: boolean
+  jsonData: ParsedJsonResponse | null
+  remainingText: string
+  rawText: string
+}

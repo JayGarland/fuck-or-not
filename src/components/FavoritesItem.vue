@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import type { FavoriteResult } from '~/types'
 import { computed, ref } from 'vue'
+import ResultDisplay from '~/components/ResultDisplay.vue'
+import { extractJsonFromResponse } from '~/logic'
 
 const props = defineProps<{
   item: FavoriteResult
@@ -13,6 +15,8 @@ const expanded = ref(false)
 const shouldExpand = computed(() => {
   return expanded.value || !props.isMobile
 })
+
+const extractedData = computed(() => extractJsonFromResponse(props.item.result))
 
 const modeMap = {
   concise: '简洁模式',
@@ -90,7 +94,9 @@ function formatTime(ts: number) {
         @click="expanded = !expanded"
       />
       <Transition name="fade">
-        <span v-if="shouldExpand"> {{ props.item.result }}</span>
+        <div v-if="shouldExpand">
+          <ResultDisplay :extracted-data="extractedData" size="normal" />
+        </div>
       </Transition>
     </div>
   </div>
