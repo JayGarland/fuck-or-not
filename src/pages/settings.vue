@@ -49,17 +49,21 @@ function clearPrompt(mode: 0 | 1 | 2) {
     设置
   </h1>
   <div py-4 />
-  <span label ml-0.5>
-    Google API 秘钥
-    <a
-      href="https://aistudio.google.com/app/apikey"
-      target="_blank"
-      ml-1 underline cursor-pointer op-70
-    >此处获取</a>
-  </span>
-  <Input v-model="googleApiKey" type="password" />
 
-  <div py-4 />
+  <!-- Temporarily hidden API key section -->
+  <div v-if="false">
+    <span label ml-0.5>
+      Google API 秘钥
+      <a
+        href="https://aistudio.google.com/app/apikey"
+        target="_blank"
+        ml-1 underline cursor-pointer op-70
+      >此处获取</a>
+    </span>
+    <Input v-model="googleApiKey" type="password" />
+    <div py-4 />
+  </div>
+
   <span label ml-0.5>
     简洁模式 Prompt
     <a
