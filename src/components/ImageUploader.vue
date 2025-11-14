@@ -50,7 +50,6 @@ async function handleFileSelect(file: File) {
 
   try {
     previewUrl.value = URL.createObjectURL(file)
-    await loadImage(previewUrl.value)
     modelValue.value = file
     await uploadFile(file) // Await the file upload process
     emit('uploaded', file)
@@ -58,15 +57,6 @@ async function handleFileSelect(file: File) {
   catch {
     emit('error', 'Failed to load or upload the image. Please try again.')
   }
-}
-
-function loadImage(src: string): Promise<void> {
-  return new Promise((resolve, reject) => {
-    const img = new Image()
-    img.onload = () => resolve()
-    img.onerror = () => reject(new Error('Image failed to load'))
-    img.src = src
-  })
 }
 
 async function uploadFile(file: File): Promise<void> {
