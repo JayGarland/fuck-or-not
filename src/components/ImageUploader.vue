@@ -20,11 +20,11 @@ const previewUrl = ref<string>()
 const dragCounter = ref(0)
 const isDragOver = computed(() => dragCounter.value > 0)
 
-function handleInputChange(e: Event) {
+async function handleInputChange(e: Event) {
   const target = e.target as HTMLInputElement
   const file = target.files?.[0]
   if (file) {
-    handleFileSelect(file)
+    await handleFileSelect(file)
   }
   // maybe should not remove image
   else if (false) {
@@ -32,7 +32,7 @@ function handleInputChange(e: Event) {
   }
 }
 
-function handleFileSelect(file: File) {
+async function handleFileSelect(file: File) {
   if (!file.type.startsWith('image/')) {
     emit('error', '请选择图片格式')
     return
@@ -47,9 +47,37 @@ function handleFileSelect(file: File) {
   if (previewUrl.value) {
     URL.revokeObjectURL(previewUrl.value)
   }
-  previewUrl.value = URL.createObjectURL(file)
-  modelValue.value = file
-  emit('uploaded', file)
+
+  try {
+    previewUrl.value = URL.createObjectURL(file)
+    await loadImage(previewUrl.value)
+    modelValue.value = file
+    await uploadFile(file) // Await the file upload process
+    emit('uploaded', file)
+  }
+  catch {
+    emit('error', 'Failed to load or upload the image. Please try again.')
+  }
+}
+
+function loadImage(src: string): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const img = new Image()
+    img.onload = () => resolve()
+    img.onerror = () => reject(new Error('Image failed to load'))
+    img.src = src
+  })
+}
+
+async function uploadFile(file: File): Promise<void> {
+  try {
+    // Simulate an upload process (replace with actual API call)
+    await new Promise(resolve => setTimeout(resolve, 2000))
+    console.log('File uploaded successfully:', file.name)
+  }
+  catch {
+    throw new Error('File upload failed')
+  }
 }
 
 function removeImage() {
